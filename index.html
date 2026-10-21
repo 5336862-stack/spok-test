@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Конструктор Спок-Опросов</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="logo" id="logo-text">Загрузка...</div>
+        <div class="title" id="sub-title">Пожалуйста, подождите</div>
+    </header>
+
+    <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+    <div class="counter-badge" id="counter">Выбрано альтернатив: 0</div>
+
+    <!-- Контейнер, куда ИИ-движок вставит экраны из JSON -->
+    <div id="dynamic-screens-container"></div>
+
+    <!-- Финальный экран балансировки -->
+    <div class="screen" id="screen-summary">
+        <div class="screen-title">Проверка Спок-баланса</div>
+        <div class="summary-list" id="summary-container"></div>
+        <div id="status-message" class="status-msg"></div>
+        <button class="btn-submit" id="submit-btn" onclick="sendData()">Отправить анонимно</button>
+    </div>
+
+    <!-- Кнопки навигации -->
+    <div class="nav-buttons" id="nav-block">
+        <button class="btn-back" id="back-btn" onclick="changeScreen(-1)" disabled>Назад</button>
+        <button class="btn-next" id="next-btn" onclick="changeScreen(1)" disabled>Далее</button>
+    </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
