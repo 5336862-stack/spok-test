@@ -122,7 +122,6 @@ function buildSummary() {
     for (let id in shortsMap) {
         const isChecked = selectedAnswers.has(parseInt(id));
         const div = document.createElement('div');
-        // Если вариант не выбран, делаем его мини-карточкой (с классом rejected)
         div.className = `summary-item ${isChecked ? 'checked' : 'rejected'}`;
         div.innerText = `${isChecked ? '✅' : '❌'} ${shortsMap[id]}`;
         container.appendChild(div);
@@ -139,15 +138,14 @@ function buildSummary() {
     }
 }
 
-// Корректная привязка жестов
+// Надежная настройка жестов свайпа
 function setupSwipeListeners() {
-    const container = document.body;
-    container.addEventListener('touchstart', e => {
-        touchStartX = e.changedTouches[0].screenX;
+    document.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches.screenX;
     }, {passive: true});
 
-    container.addEventListener('touchend', e => {
-        touchEndX = e.changedTouches[0].screenX;
+    document.addEventListener('touchend', e => {
+        touchEndX = e.changedTouches.screenX;
         handleSwipeGesture();
     }, {passive: true});
 }
@@ -158,7 +156,7 @@ function handleSwipeGesture() {
     if (touchEndX - touchStartX > minSwipeDistance) changeScreen(-1); // Свайп вправо
 }
 
-// Анти-накрутка: Проверка при старте и блокировка при отправке
+// Защищенная отправка и установка метки
 function sendData() {
     const payload = {
         survey_id: surveyData.survey_id,
@@ -166,24 +164,51 @@ function sendData() {
         answers: Array.from(selectedAnswers)
     };
     
-    // Ставим невидимую метку в память смартфона
     localStorage.setItem(`voted_${surveyData.survey_id}`, "true");
-    
-    alert("Голос принят! Повторное голосование заблокировано для этого устройства.");
-    location.reload(); // Перезагружаем страницу для применения блокировки
+    alert("Голос принят! Повторное голосование блокировано для этого устройства.");
+    location.reload();
 }
 
-// Встраиваем проверку блокировки в инициализацию
-const оригинальныйInit = initSurvey;
-initSurvey = function() {
+// Прямая проверка блокировки без циклов
+function initSurvey() {
     if (localStorage.getItem(`voted_${surveyData.survey_id}`) === "true") {
         document.body.innerHTML = `
-            <div style="max-width:450px; margin:50px auto; text-align:center; padding:20px; font-family:sans-serif;">
-                <div style="font-size:3rem; margin-bottom:20px;">🛡️</div>
-                <h2 style="color:#00bfa5; margin-bottom:10px;">Ваш голос уже учтен</h2>
-                <p style="color:#7f8c8d; line-height:1.4;">В соответствии с регламентом платформы 'Новые Люди', повторное голосование с одного устройства заблокировано для защиты от накруток.</p>
+            <div style="max-width:450px; margin:80px auto; text-align:center; padding:20px; font-family:sans-serif; color:#2c3e50;">
+                <div style="font-size:3.5rem; margin-bottom:20px;">🛡️</div>
+                <h2 style="color:#00bfa5; margin-bottom:12px; font-size:1.4rem;">Ваш голос уже учтен</h2>
+                <p style="color:#7f8c8d; line-height:1.5; font-size:1rem;">В соответствии с регламентом платформы 'Новые Люди', повторное голосование с одного устройства заблокировано для защиты от накруток.</p>
             </div>`;
         return;
     }
-    оригинальныйInit();
+
+    document.getElementById('logo-text').innerText = surveyData.party_title;
+    document.getElementById('sub-title').innerText = surveyData.survey_title;
+    
+    const container = document.getElementById('dynamic-screens-container');
+    const screens = surveyData.screens;
+    totalScreens = screens.length + 1;
+
+    screens.forEach((screen, sIdx) => {
+        const screenDiv = document.createElement('div');
+        screenDiv.className = `screen ${sIdx === 0 ? 'active' : ''}`;
+        screenDiv.id = `screen-${sIdx}`;
+
+        const titleDiv = document.createElement('div');
+        titleDiv.className = 'screen-title';
+        titleDiv.innerText = screen.title;
+        screenDiv.appendChild(titleDiv);
+
+        screen.questions.forEach(q => {
+            shortsMap[q.id] = q.short;
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'card';
+            cardDiv.onclick = () => toggleSelect(q.id, cardDiv);
+            cardDiv.innerHTML = `<div class="card-text">${q.text}</div><div class="checkbox-view"></div>`;
+            screenDiv.appendChild(cardDiv);
+        });
+        container.appendChild(screenDiv);
+    });
+
+    document.getElementById('next-btn').disabled = false;
+    updateProgress();
 }
