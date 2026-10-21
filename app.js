@@ -1,42 +1,25 @@
-// Данные теперь встроены напрямую, CORS блокировка не сработает
-const surveyData = {
-  "survey_id": "snt_reform_2026",
-  "party_title": "Новые Люди",
-  "survey_title": "Платформа цифрового волеизъявления",
-  "required_choices": 3,
-  "screens": [
-    {
-      "title": "Дороги и зимний сезон",
-      "questions": [
-        {"id": 1, "short": "Летний режим (без чистки)", "text": "Я готов платить меньше летом, понимая, что зимой дороги к моему участку чистить не будут."},
-        {"id": 2, "short": "Круглогодичный тариф (с трактором)", "text": "Я хочу круглогодичный проезд и готов оплачивать работу трактора зимой по повышенному тарифу."}
-      ]
-    },
-    {
-      "title": "Принцип расчета взносов",
-      "questions": [
-        {"id": 3, "short": "Матричный динамический тариф", "text": "Размер взноса должен зависеть от реального износа инфраструктуры (машины, стоки, мусор), а не от соток."},
-        {"id": 4, "short": "Традиционная уравниловка", "text": "Уравниловка ('все платят поровну') — это честно, даже если я не пользуюсь частью услуг."}
-      ]
-    },
-    {
-      "title": "Управление и прозрачность",
-      "questions": [
-        {"id": 5, "short": "Независимый ИИ-биллинг", "text": "Я не доверяю ручным расчетам Правления и хочу видеть автоматический ИИ-биллинг."},
-        {"id": 6, "short": "Консервативное ручное управление", "text": "Мне проще переплатить, чем разбираться в сложных цифровых графиках и приложениях."}
-      ]
-    }
-  ]
-};
-
+let surveyData = null;
 let selectedAnswers = new Set();
 let currentScreen = 0;
 let totalScreens = 0;
 let shortsMap = {};
 
-// Инициализация запускается сразу, без fetch
+// Координаты для отслеживания жестов свайпа
+let touchStartX = 0;
+let touchEndX = 0;
+
 document.addEventListener("DOMContentLoaded", () => {
-    initSurvey();
+    fetch('survey.json')
+        .then(response => response.json())
+        .then(data => {
+            surveyData = data;
+            initSurvey();
+            setupSwipeListeners(); // Подключаем жесты
+        })
+        .catch(err => {
+            document.getElementById('logo-text').innerText = "Ошибка";
+            document.getElementById('sub-title').innerText = "Не удалось загрузить survey.json";
+        });
 });
 
 function initSurvey() {
@@ -65,11 +48,8 @@ function initSurvey() {
             cardDiv.innerHTML = `<div class="card-text">${q.text}</div><div class="checkbox-view"></div>`;
             screenDiv.appendChild(cardDiv);
         });
-
         container.appendChild(screenDiv);
     });
-
-    document.getElementById('next-btn').disabled = false;
     updateProgress();
 }
 
@@ -86,6 +66,8 @@ function toggleSelect(id, element) {
 }
 
 function changeScreen(direction) {
+    if (currentScreen + direction < 0 || currentScreen + direction >= totalScreens) return;
+
     const activeId = currentScreen === totalScreens - 1 ? 'screen-summary' : `screen-${currentScreen}`;
     document.getElementById(activeId).classList.remove('active');
 
@@ -136,11 +118,36 @@ function buildSummary() {
     }
 }
 
+// НАСТРОЙКА ЖЕСТОВ СВАЙПА
+function setupSwipeListeners() {
+    document.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches.screenX;
+    }, {passive: true});
+
+    document.addEventListener('touchend', e => {
+        touchEndX = e.changedTouches.screenX;
+        handleSwipeGesture();
+    }, {passive: true});
+}
+
+function handleSwipeGesture() {
+    const minSwipeDistance = 60; // Расстояние в пикселях для защиты от случайных сдвигов
+    if (touchStartX - touchEndX > minSwipeDistance) {
+        changeScreen(1);  // Свайп влево — идем вперед
+    }
+    if (touchEndX - touchStartX > minSwipeDistance) {
+        changeScreen(-1); // Свайп вправо — идем назад
+    }
+}
+
+// РАБОТА НАД ПРИЕМОМ ОТПРАВЛЕНИЙ
 function sendData() {
     const payload = {
         survey_id: surveyData.survey_id,
         voted_at: new Date().toISOString(),
         answers: Array.from(selectedAnswers)
     };
-    alert("Успешно отправлено на обработку!\nПакет: " + JSON.stringify(payload));
+    
+    // Информационное окно-заглушка для демонстрации сформированного пакета
+    alert("Голос принят! Подготовлен JSON-пакет для сервера:\n\n" + JSON.stringify(payload));
 }
