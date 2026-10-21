@@ -1,4 +1,4 @@
-// Конструктор Спок-опроса: данные встроены для обхода сетевых блокировок хостинга
+// Данные теперь встроены напрямую, CORS блокировка не сработает
 const surveyData = {
   "survey_id": "snt_reform_2026",
   "party_title": "Новые Люди",
@@ -34,6 +34,7 @@ let currentScreen = 0;
 let totalScreens = 0;
 let shortsMap = {};
 
+// Инициализация запускается сразу, без fetch
 document.addEventListener("DOMContentLoaded", () => {
     initSurvey();
 });
@@ -141,5 +142,5 @@ function sendData() {
         voted_at: new Date().toISOString(),
         answers: Array.from(selectedAnswers)
     };
-    alert("Успешно отправлено на обработку!\nПакет данных: " + JSON.stringify(payload));
+    alert("Успешно отправлено на обработку!\nПакет: " + JSON.stringify(payload));
 }
