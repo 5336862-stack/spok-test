@@ -1,25 +1,47 @@
-let surveyData = null;
+// Конструктор Спок-опроса: данные встроены для обхода сетевых блокировок хостинга
+const surveyData = {
+  "survey_id": "snt_reform_2026",
+  "party_title": "Новые Люди",
+  "survey_title": "Платформа цифрового волеизъявления",
+  "required_choices": 3,
+  "screens": [
+    {
+      "title": "Дороги и зимний сезон",
+      "questions": [
+        {"id": 1, "short": "Летний режим (без чистки)", "text": "Я готов платить меньше летом, понимая, что зимой дороги к моему участку чистить не будут."},
+        {"id": 2, "short": "Круглогодичный тариф (с трактором)", "text": "Я хочу круглогодичный проезд и готов оплачивать работу трактора зимой по повышенному тарифу."}
+      ]
+    },
+    {
+      "title": "Принцип расчета взносов",
+      "questions": [
+        {"id": 3, "short": "Матричный динамический тариф", "text": "Размер взноса должен зависеть от реального износа инфраструктуры (машины, стоки, мусор), а не от соток."},
+        {"id": 4, "short": "Традиционная уравниловка", "text": "Уравниловка ('все платят поровну') — это честно, даже если я не пользуюсь частью услуг."}
+      ]
+    },
+    {
+      "title": "Управление и прозрачность",
+      "questions": [
+        {"id": 5, "short": "Независимый ИИ-биллинг", "text": "Я не доверяю ручным расчетам Правления и хочу видеть автоматический ИИ-биллинг."},
+        {"id": 6, "short": "Консервативное ручное управление", "text": "Мне проще переплатить, чем разбираться в сложных цифровых графиках и приложениях."}
+      ]
+    }
+  ]
+};
+
 let selectedAnswers = new Set();
 let currentScreen = 0;
 let totalScreens = 0;
 let shortsMap = {};
 
-// Координаты для отслеживания жестов свайпа
+// Координаты для отслеживания жестов свайпа на смартфонах
 let touchStartX = 0;
 let touchEndX = 0;
 
+// Запуск инициализации сразу после загрузки страницы
 document.addEventListener("DOMContentLoaded", () => {
-    fetch('survey.json')
-        .then(response => response.json())
-        .then(data => {
-            surveyData = data;
-            initSurvey();
-            setupSwipeListeners(); // Подключаем жесты
-        })
-        .catch(err => {
-            document.getElementById('logo-text').innerText = "Ошибка";
-            document.getElementById('sub-title').innerText = "Не удалось загрузить survey.json";
-        });
+    initSurvey();
+    setupSwipeListeners(); // Включаем поддержку свайпов пальцем
 });
 
 function initSurvey() {
@@ -48,8 +70,11 @@ function initSurvey() {
             cardDiv.innerHTML = `<div class="card-text">${q.text}</div><div class="checkbox-view"></div>`;
             screenDiv.appendChild(cardDiv);
         });
+
         container.appendChild(screenDiv);
     });
+
+    document.getElementById('next-btn').disabled = false;
     updateProgress();
 }
 
@@ -118,7 +143,7 @@ function buildSummary() {
     }
 }
 
-// НАСТРОЙКА ЖЕСТОВ СВАЙПА
+// ДОБАВЛЕННЫЙ БЛОК: Считывание жестов пальцем по экрану смартфона
 function setupSwipeListeners() {
     document.addEventListener('touchstart', e => {
         touchStartX = e.changedTouches.screenX;
@@ -131,23 +156,21 @@ function setupSwipeListeners() {
 }
 
 function handleSwipeGesture() {
-    const minSwipeDistance = 60; // Расстояние в пикселях для защиты от случайных сдвигов
+    const minSwipeDistance = 60; // Защитный порог от случайных микродвижений пальца
     if (touchStartX - touchEndX > minSwipeDistance) {
-        changeScreen(1);  // Свайп влево — идем вперед
+        changeScreen(1);  // Движение пальцем влево -> Перелистываем вперед
     }
     if (touchEndX - touchStartX > minSwipeDistance) {
-        changeScreen(-1); // Свайп вправо — идем назад
+        changeScreen(-1); // Движение пальцем вправо -> Перелистываем назад
     }
 }
 
-// РАБОТА НАД ПРИЕМОМ ОТПРАВЛЕНИЙ
+// ПОДГОТОВКА ПРИЕМА ОТПРАВЛЕНИЙ
 function sendData() {
     const payload = {
         survey_id: surveyData.survey_id,
         voted_at: new Date().toISOString(),
         answers: Array.from(selectedAnswers)
     };
-    
-    // Информационное окно-заглушка для демонстрации сформированного пакета
-    alert("Голос принят! Подготовлен JSON-пакет для сервера:\n\n" + JSON.stringify(payload));
+    alert("Голос принят! Подготовлен пакет данных для отправки:\n\n" + JSON.stringify(payload));
 }
