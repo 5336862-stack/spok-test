@@ -34,14 +34,14 @@ let currentScreen = 0;
 let totalScreens = 0;
 let shortsMap = {};
 
-// Координаты для отслеживания жестов свайпа на смартфонах
+// Переменные для распознавания жестов
 let touchStartX = 0;
 let touchEndX = 0;
 
-// Запуск инициализации сразу после загрузки страницы
+// Инициализация запускается сразу, без fetch
 document.addEventListener("DOMContentLoaded", () => {
     initSurvey();
-    setupSwipeListeners(); // Включаем поддержку свайпов пальцем
+    setupSwipeListeners(); // Подключаем считывание свайпов пальцем
 });
 
 function initSurvey() {
@@ -76,101 +76,4 @@ function initSurvey() {
 
     document.getElementById('next-btn').disabled = false;
     updateProgress();
-}
-
-function toggleSelect(id, element) {
-    if (selectedAnswers.has(id)) {
-        selectedAnswers.delete(id);
-        element.classList.remove('selected');
-    } else {
-        selectedAnswers.add(id);
-        element.classList.add('selected');
-    }
-    const req = surveyData.required_choices;
-    document.getElementById('counter').innerText = `Выбрано альтернатив: ${selectedAnswers.size} из ${req}`;
-}
-
-function changeScreen(direction) {
-    if (currentScreen + direction < 0 || currentScreen + direction >= totalScreens) return;
-
-    const activeId = currentScreen === totalScreens - 1 ? 'screen-summary' : `screen-${currentScreen}`;
-    document.getElementById(activeId).classList.remove('active');
-
-    currentScreen += direction;
-
-    const nextId = currentScreen === totalScreens - 1 ? 'screen-summary' : `screen-${currentScreen}`;
-    document.getElementById(nextId).classList.add('active');
-
-    document.getElementById('back-btn').disabled = (currentScreen === 0);
-    
-    if (currentScreen === totalScreens - 1) {
-        document.getElementById('next-btn').style.display = 'none';
-        buildSummary();
-    } else {
-        document.getElementById('next-btn').style.display = 'block';
-        document.getElementById('next-btn').innerText = "Далее";
-    }
-    updateProgress();
-}
-
-function updateProgress() {
-    document.getElementById('progress').style.width = `${((currentScreen + 1) / totalScreens) * 100}%`;
-}
-
-function buildSummary() {
-    const container = document.getElementById('summary-container');
-    const statusBox = document.getElementById('status-message');
-    const submitBtn = document.getElementById('submit-btn');
-    const req = surveyData.required_choices;
-    container.innerHTML = '';
-
-    for (let id in shortsMap) {
-        const isChecked = selectedAnswers.has(parseInt(id));
-        const div = document.createElement('div');
-        div.className = `summary-item ${isChecked ? 'checked' : ''}`;
-        div.innerText = `${isChecked ? '✅' : '❌'} ${shortsMap[id]}`;
-        container.appendChild(div);
-    }
-
-    if (selectedAnswers.size === req) {
-        statusBox.className = "status-msg success";
-        statusBox.innerText = `⚖️ Баланс идеален! Выбрано ровно ${req} из ${req * 2} альтернатив.`;
-        submitBtn.classList.add('active');
-    } else {
-        statusBox.className = "status-msg error";
-        statusBox.innerText = `⚠️ Дисбаланс! Спок-метод требует выбрать ровно ${req} вариантов (выбрано: ${selectedAnswers.size}).`;
-        submitBtn.classList.remove('active');
-    }
-}
-
-// ДОБАВЛЕННЫЙ БЛОК: Считывание жестов пальцем по экрану смартфона
-function setupSwipeListeners() {
-    document.addEventListener('touchstart', e => {
-        touchStartX = e.changedTouches.screenX;
-    }, {passive: true});
-
-    document.addEventListener('touchend', e => {
-        touchEndX = e.changedTouches.screenX;
-        handleSwipeGesture();
-    }, {passive: true});
-}
-
-function handleSwipeGesture() {
-    const minSwipeDistance = 60; // Защитный порог от случайных микродвижений пальца
-    if (touchStartX - touchEndX > minSwipeDistance) {
-        changeScreen(1);  // Движение пальцем влево -> Перелистываем вперед
-    }
-    if (touchEndX - touchStartX > minSwipeDistance) {
-        changeScreen(-1); // Движение пальцем вправо -> Перелистываем назад
-    }
-}
-
-// ПОДГОТОВКА ПРИЕМА ОТПРАВЛЕНИЙ
-function sendData() {
-    const payload = {
-        survey_id: surveyData.survey_id,
-        voted_at: new Date().toISOString(),
-        answers: Array.from(selectedAnswers)
-    };
-    alert("Голос принят! Подготовлен пакет данных для отправки:\n\n" + JSON.stringify(payload));
 }
