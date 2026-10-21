@@ -11,52 +11,54 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
 
-/* Фиксируем светлую тему и динамическую высоту под прыгающую адресную строку */
-html, body { 
-    color-scheme: light; 
-    background-color: var(--bg); 
-    color: var(--text); 
+html { background-color: var(--bg) !important; }
+
+body { 
+    background: var(--bg) !important; 
+    color: var(--text) !important; 
     min-height: 100dvh; 
     height: 100dvh;
+    padding: 15px; 
+    display: flex; 
+    flex-direction: column;
 }
-
-body { padding: 15px; display: flex; flex-direction: column; }
 
 .container { max-width: 450px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; flex-grow: 1; }
 
-header { text-align: center; margin-bottom: 20px; }
-.logo { font-weight: 800; text-transform: uppercase; color: var(--primary); font-size: 1.3rem; letter-spacing: 0.5px; }
-.title { font-size: 0.95rem; color: var(--text-light); margin-top: 4px; }
+header { text-align: center; margin-bottom: 15px; }
+.logo { font-weight: 800; text-transform: uppercase; color: var(--primary); font-size: 1.2rem; }
+.title { font-size: 0.85rem; color: var(--text-light); margin-top: 4px; }
 
-.progress-bar { background: var(--border); height: 8px; border-radius: 4px; margin-bottom: 15px; overflow: hidden; }
+.progress-bar { background: var(--border); height: 6px; border-radius: 3px; margin-bottom: 12px; overflow: hidden; }
 .progress-fill { background: var(--primary); height: 100%; width: 0%; transition: width 0.3s ease; }
-.counter-badge { text-align: center; font-size: 1.1rem; font-weight: 700; color: var(--text-light); margin-bottom: 20px; }
+.counter-badge { text-align: center; font-size: 1rem; font-weight: 700; color: var(--text-light); margin-bottom: 15px; }
 
-.screen { display: none; flex-direction: column; gap: 16px; flex-grow: 1; }
+.screen { display: none; flex-direction: column; gap: 14px; flex-grow: 1; }
 .screen.active { display: flex; }
-.screen-title { font-size: 1.35rem; font-weight: 700; margin-bottom: 8px; text-align: center; }
+.screen-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 4px; text-align: center; }
 
-/* Крупный шрифт и комфортные отступы убирают 40% пустоты */
-.card { background: var(--card-bg); border: 2px solid var(--border); border-radius: 16px; padding: 26px 20px; cursor: pointer; position: relative; -webkit-tap-highlight-color: transparent; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+.card { background: var(--card-bg); border: 2px solid var(--border); border-radius: 14px; padding: 22px 18px; cursor: pointer; position: relative; -webkit-tap-highlight-color: transparent; }
 .card.selected { border-color: var(--primary); background-color: rgba(0, 191, 165, 0.04); }
-.card-text { font-size: 1.25rem; line-height: 1.5; padding-right: 35px; font-weight: 500; }
+.card-text { font-size: 1.15rem; line-height: 1.45; padding-right: 35px; font-weight: 500; color: var(--text); }
 
-.checkbox-view { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); width: 24px; height: 24px; border: 2px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.checkbox-view { position: absolute; right: 18px; top: 50%; transform: translateY(-50%); width: 22px; height: 22px; border: 2px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
 .card.selected .checkbox-view { border-color: var(--primary); background: var(--primary); }
-.card.selected .checkbox-view::after { content: "✓"; color: white; font-size: 0.9rem; font-weight: bold; }
+.card.selected .checkbox-view::after { content: "✓"; color: white; font-size: 0.85rem; font-weight: bold; }
 
-.summary-list { display: flex; flex-direction: column; gap: 10px; }
-.summary-item { background: var(--card-bg); padding: 14px 16px; border-radius: 10px; border-left: 5px solid var(--border); font-size: 1.1rem; font-weight: 500; }
-.summary-item.checked { border-left-color: var(--primary); background: rgba(0, 191, 165, 0.01); }
+.summary-list { display: flex; flex-direction: column; gap: 6px; }
 
-.status-msg { text-align: center; padding: 15px; border-radius: 12px; font-weight: 700; font-size: 1.1rem; margin-top: 15px; line-height: 1.4; }
-.status-msg.error { background: #fdf2f2; color: var(--error); border: 1px solid #f8b4b4; }
-.status-msg.success { background: #f0fdf4; color: var(--success); border: 1px solid #bbf7d0; }
+/* Применяем компактный стиль для финальных строк во избежание вылетов */
+.summary-item { background: var(--card-bg); padding: 8px 12px; border-radius: 8px; border-left: 5px solid var(--border); font-size: 0.95rem; font-weight: 500; }
+.summary-item.checked { border-left-color: var(--primary); }
+.summary-item.rejected { opacity: 0.4; border-left-color: #cbd5e1; background: transparent; font-size: 0.85rem; }
 
-/* Кнопки теперь прижаты строго над системной областью смартфона */
-.nav-buttons { display: flex; gap: 12px; margin-top: auto; padding: 15px 0 env(safe-area-inset-bottom) 0; }
-button { flex: 1; padding: 18px; border-radius: 14px; border: none; font-size: 1.15rem; font-weight: 700; -webkit-tap-highlight-color: transparent; }
+.status-msg { text-align: center; padding: 10px; border-radius: 10px; font-weight: 700; font-size: 0.95rem; margin-top: 10px; }
+.status-msg.error { background: #fdf2f2; color: var(--error); }
+.status-msg.success { background: #f0fdf4; color: var(--success); }
+
+.nav-buttons { display: flex; gap: 12px; margin-top: auto; padding: 10px 0 env(safe-area-inset-bottom) 0; }
+button { flex: 1; padding: 16px; border-radius: 12px; border: none; font-size: 1.05rem; font-weight: 700; -webkit-tap-highlight-color: transparent; }
 .btn-back { background: var(--border); color: var(--text); }
 .btn-next { background: var(--primary); color: white; }
-.btn-submit { background: var(--success); color: white; width: 100%; display: none; margin-top: 20px; padding: 18px; }
+.btn-submit { background: var(--success); color: white; width: 100%; display: none; margin-top: 10px; padding: 16px; }
 .btn-submit.active { display: block; }
