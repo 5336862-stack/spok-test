@@ -173,6 +173,7 @@ function sendData() {
         voted_at: new Date().toISOString(),
         answers: Array.from(selectedAnswers)
     };
+    const webAppUrl = "https://script.google.com/macros/s/AKfycbzeiFcKZp9Mdh4WEDZOAGPZIozuaSJwfiM7ZsFQLca9rOHQ_RGCQV11sfiWoM_lniCfwg/exec";
     localStorage.setItem(`voted_${surveyData.survey_id}`, "true");
     alert("Голос принят! Повторное голосование блокировано для этого устройства.");
     location.reload();
