@@ -73,7 +73,7 @@ function initSurvey() {
 
         container.appendChild(screenDiv);
     });
-  function toggleSelect(id, element) {
+function toggleSelect(id, element) {
     if (selectedAnswers.has(id)) {
         selectedAnswers.delete(id);
         element.classList.remove('selected');
@@ -86,7 +86,6 @@ function initSurvey() {
 }
 
 function changeScreen(direction) {
-    // Защита: не даем перелистнуть за пределы существующих экранов
     if (currentScreen + direction < 0 || currentScreen + direction >= totalScreens) return;
 
     const activeId = currentScreen === totalScreens - 1 ? 'screen-summary' : `screen-${currentScreen}`;
@@ -123,7 +122,8 @@ function buildSummary() {
     for (let id in shortsMap) {
         const isChecked = selectedAnswers.has(parseInt(id));
         const div = document.createElement('div');
-        div.className = `summary-item ${isChecked ? 'checked' : ''}`;
+        // Если вариант не выбран, делаем его мини-карточкой (с классом rejected)
+        div.className = `summary-item ${isChecked ? 'checked' : 'rejected'}`;
         div.innerText = `${isChecked ? '✅' : '❌'} ${shortsMap[id]}`;
         container.appendChild(div);
     }
@@ -134,43 +134,56 @@ function buildSummary() {
         submitBtn.classList.add('active');
     } else {
         statusBox.className = "status-msg error";
-        statusBox.innerText = `⚠️ Дисбаланс! Спок-метод требует выбрать ровно ${req} вариантов (выбрано: ${selectedAnswers.size}).`;
+        statusBox.innerText = `⚠️ Дисбаланс! Требуется выбрать ровно ${req} вариантов.`;
         submitBtn.classList.remove('active');
     }
 }
 
-// Слушатели жестов для мобильного перелистывания
+// Корректная привязка жестов
 function setupSwipeListeners() {
-    document.addEventListener('touchstart', e => {
-        touchStartX = e.changedTouches.screenX;
+    const container = document.body;
+    container.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
     }, {passive: true});
 
-    document.addEventListener('touchend', e => {
-        touchEndX = e.changedTouches.screenX;
+    container.addEventListener('touchend', e => {
+        touchEndX = e.changedTouches[0].screenX;
         handleSwipeGesture();
     }, {passive: true});
 }
 
 function handleSwipeGesture() {
-    const minSwipeDistance = 60; // Порог чувствительности свайпа в пикселях
-    if (touchStartX - touchEndX > minSwipeDistance) {
-        changeScreen(1);  // Палец влево -> Экран вперед
-    }
-    if (touchEndX - touchStartX > minSwipeDistance) {
-        changeScreen(-1); // Палец вправо -> Экран назад
-    }
+    const minSwipeDistance = 50;
+    if (touchStartX - touchEndX > minSwipeDistance) changeScreen(1);  // Свайп влево
+    if (touchEndX - touchStartX > minSwipeDistance) changeScreen(-1); // Свайп вправо
 }
 
+// Анти-накрутка: Проверка при старте и блокировка при отправке
 function sendData() {
     const payload = {
         survey_id: surveyData.survey_id,
         voted_at: new Date().toISOString(),
         answers: Array.from(selectedAnswers)
     };
-    alert("Успешно отправлено на обработку!\nПакет: " + JSON.stringify(payload));
+    
+    // Ставим невидимую метку в память смартфона
+    localStorage.setItem(`voted_${surveyData.survey_id}`, "true");
+    
+    alert("Голос принят! Повторное голосование заблокировано для этого устройства.");
+    location.reload(); // Перезагружаем страницу для применения блокировки
 }
 
-
-    document.getElementById('next-btn').disabled = false;
-    updateProgress();
+// Встраиваем проверку блокировки в инициализацию
+const оригинальныйInit = initSurvey;
+initSurvey = function() {
+    if (localStorage.getItem(`voted_${surveyData.survey_id}`) === "true") {
+        document.body.innerHTML = `
+            <div style="max-width:450px; margin:50px auto; text-align:center; padding:20px; font-family:sans-serif;">
+                <div style="font-size:3rem; margin-bottom:20px;">🛡️</div>
+                <h2 style="color:#00bfa5; margin-bottom:10px;">Ваш голос уже учтен</h2>
+                <p style="color:#7f8c8d; line-height:1.4;">В соответствии с регламентом платформы 'Новые Люди', повторное голосование с одного устройства заблокировано для защиты от накруток.</p>
+            </div>`;
+        return;
+    }
+    оригинальныйInit();
 }
